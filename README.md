@@ -6,7 +6,7 @@ Demo for using [orbitdb](https://github.com/orbitdb/orbitdb).
 
 Node 1:
 ~~~shell
-node orbitv3-peer1.js --ipAddress=127.0.0.1
+node orbitv3-master.js --ipAddress=127.0.0.1
 ~~~
 
 Copy the db address.
@@ -14,6 +14,6 @@ Copy the db address.
 Node 2:
 
 ~~~shell
-node orbitv3-peer2.js --ipAddress=127.0.0.1 --dbAddress=/orbitdb/zdpuAom2Jvo4Z4sjyaRy1VatVxQuw9SVWuFTBz48PSHhRAMsJ
+node orbitv3-slave.js --ipAddress=127.0.0.1 --dbAddress=/orbitdb/zdpuB31L6gJz49erikZSQT3A1erJbid8oUTBrjLtBwjjXe3R5
 ~~~
 
