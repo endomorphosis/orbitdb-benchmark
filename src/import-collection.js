@@ -2,7 +2,7 @@ import { WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';
 
-const parent_dir = path.dirname("../..");
+const parent_dir = path.dirname("..");
 const resolve_path = path.resolve(parent_dir)
 const collection_path = path.join(resolve_path, 'collection.json');
 

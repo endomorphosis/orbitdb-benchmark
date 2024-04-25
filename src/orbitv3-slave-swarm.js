@@ -1,6 +1,5 @@
 import {createOrbitDB, Identities, OrbitDBAccessController} from '@orbitdb/core'
 import {createHelia} from 'helia'
-import {v4 as uuidv4} from 'uuid';
 import {EventEmitter} from "events";
 import {createLibp2p} from 'libp2p'
 import {identify} from '@libp2p/identify'
@@ -17,27 +16,28 @@ import { WebSocketServer } from 'ws'
 const require = createRequire(import.meta.url);
 
 const ipfsLibp2pOptions = {
-    transports: [
-        tcp(),
-    ],
-    streamMuxers: [
-        yamux()
-    ],
-    connectionEncryption: [
-        noise()
-    ],
-    peerDiscovery: [
-        mdns({
-            interval: 20e3
-        })
-    ],
-    services: {
-        pubsub: gossipsub({
-            allowPublishToZeroPeers: true
-        }),
-        identify: identify()
-    },
-    connectionManager: {}
+  transports: [
+    tcp(),
+  ],
+  streamMuxers: [
+    yamux()
+  ],
+  connectionEncryption: [
+    noise()
+  ],
+  peerDiscovery: [
+    mdns({
+      interval: 20e3
+    })
+  ],
+  services: {
+    pubsub: gossipsub({
+      allowPublishToZeroPeers: true
+    }),
+    identify: identify()
+  },
+  connectionManager: {
+  }
 }
 
 EventEmitter.defaultMaxListeners = 20;
@@ -46,100 +46,70 @@ let ipfs
 let orbitdb
 let db
 
-async function run(options = {}) {
-    process.env.LIBP2P_FORCE_PNET = "1"
+async function run () {
     const argv = require('minimist')(process.argv.slice(2))
     let ipAddress
     let dbAddress
     let index
-    let chunkSize
-    let swarmName
-    let port
-    if (!argv.ipAddress && !Object.keys(options).includes('ipAddress')) {
+    if (!argv.ipAddress) {
         ipAddress = "127.0.0.1"
-    } else if (Object.keys(options).includes('ipAddress')){
-        ipAddress = options.ipAddress
-    }
-    else if (!argv.ipAddress) {
+    } else {
         ipAddress = argv.ipAddress
     }
-    if (!argv.swarmName && !Object.keys(options).includes('swarmName')) {
-        console.error('Please provide a swarm key');
-        process.exit(1);
+    if (!argv.dbAddress) {
+        dbAddress = "/orbitdb/zdpuB31L6gJz49erikZSQT3A1erJbid8oUTBrjLtBwjjXe3R5"
     }
-    else if (Object.keys(options).includes('swarmName')) {
-        swarmName = options.swarmName
+    else {
+        dbAddress = argv.dbAddress
     }
-    else if (argv.swarmName) {
-        swarmName = argv.swarmName
-    }
-    
-    if (!argv.port && !Object.keys(options).includes('port')) {
-        console.error('Please provide a port number');
-        process.exit(1);
-    }else if (Object.keys(options).includes('port')) {
-        port = options.port
-    }else if (argv.port) {
-        port = argv.port
-    }
-
-    if (!argv.chunkSize && !Object.keys(options).includes('chunkSize')) {
-        console.error('Please provide a chunk size');
-        process.exit(1);
-    }else if (Object.keys(options).includes('chunkSize')) {
-        chunkSize = options.chunkSize
-    }else if (argv.chunkSize) {
-        chunkSize = argv.chunkSize
-    }
-
-    if (!argv.index && !Object.keys(options).includes('index')) {
+    if (!argv.index) {
         console.error('Please provide an index');
-        process.exit(1);
     }
-    else if (Object.keys(options).includes('index')) {
-        index = options.index
-    }
-    else if (argv.index) {
+    else {
         index = argv.index
     }
-
-    // console.log({
-    //     ipAddress,
-    //     dbAddress,
-    //     index,
-    //     chunkSize,
-    //     swarmName,
-    //     port
-    // })
-
     process.on('SIGTERM', handleTerminationSignal);
     process.on('SIGINT', handleTerminationSignal);
-    //console.info('Script is running. Press CTRL+C to terminate.');
-
-    const id = index
-    const libp2p = await createLibp2p({
-        addresses: {
-            listen: [`/ip4/${ipAddress}/tcp/0`]
-        }, ...ipfsLibp2pOptions
-    })
+    console.info('Script is running. Press CTRL+C to terminate.');
+    const id =  index
+    const libp2p = await createLibp2p({  addresses: {
+        listen: [`/ip4/${ipAddress}/tcp/0`]
+        }, ...ipfsLibp2pOptions})
     const blockstore = new LevelBlockstore(`./ipfs/`+id+`/blocks`)
     ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, blockBrokers: [bitswap()]})
-    const identities = await Identities({ipfs, path: `./orbitdb/`+id+`/identities`})
-    identities.createIdentity({id}) // Remove the unused variable 'identity'
+    const identities = await Identities({ ipfs, path: `./orbitdb/`+id+`/identities` })
+    const identity = identities.createIdentity({ id })
     orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
 
-    db = await orbitdb.open(swarmName+"-"+index+"-of-"+chunkSize,
-        {
-            type: 'documents',
-            AccessController: OrbitDBAccessController({write: ["*"]})
+    db = await orbitdb.open(dbAddress,
+        {type: 'documents',
+            AccessController: OrbitDBAccessController({ write: ["*"], sync: false}),
         })
-    config_json = fs.readFileSync('config.json', 'utf8');
-    config_json = JSON.parse(config_json);
-    config_json[index]["orbitdbAddress"] = db.address.toString();
-    fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
-    console.info(`running with db address ${db.address}`)
-    // Add a new WebSocket server
-    const wss = new WebSocketServer({ port: port })
+    let oldHeads = await db.log.heads()
+    console.debug(`${new Date().toISOString()} initial heads ${JSON.stringify(Array.from(oldHeads, h => h.payload))}`)
+    await new Promise(r => setTimeout(r, 5000));
+    await db.close()
+    console.debug(`${new Date().toISOString()} opening db for sync`)
+    db = await orbitdb.open(dbAddress,
+        {type: 'documents',
+            AccessController: OrbitDBAccessController({ write: ["*"]}),
+        })
+    db.events.on('join', async (peerId, heads) => {
+        for await (let entry of heads) {
+            console.info(`peer ${peerId} joined with head ${JSON.stringify(entry.payload)}`)
+        }
+        if (oldHeads) {
+            for (let hash of Array.from(oldHeads, h => h.hash)) {
+                let it = db.log.iterator({gt: hash})
+                for await (let entry of it) {
+                    console.debug(`new startup entry ${JSON.stringify(entry.payload)}`)
+                    oldHeads = [entry]
+                }
+            }
+        }
+    })
+    console.info(`${new Date().toISOString()}running with db address ${db.address}`)
+    const wss = new WebSocketServer({ port: 8888 + id })
     wss.on('connection', (ws) => {
         console.log('New WebSocket connection');
         ws.on('message', (message) => {
@@ -226,6 +196,30 @@ async function run(options = {}) {
             }
         });
     });
+    console.info(`${new Date().toISOString()} getting updates ...`)
+    db.events.on('update', async (entry) => {
+        console.debug(`new head entry op ${entry.payload.op} with value ${JSON.stringify(entry.payload.value)}`)
+        if (oldHeads) {
+            for (let hash of Array.from(oldHeads, h => h.hash)) {
+            let it = db.log.iterator({gt: hash, lte: entry.hash})
+            for await (let entry of it) {
+                console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
+                oldHeads = [entry]
+            }
+            }
+        } else {
+            let it = db.log.iterator({lte: entry.hash})
+            for await (let entry of it) {
+            console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
+            oldHeads = [entry]
+            }
+        }
+    })
+    console.info(`${new Date().toISOString()} searching result: `)
+    let result = await db.query(data => {
+        return data.content === "content 5000"
+    })
+    console.info(`${new Date().toISOString()} result: `, JSON.stringify(result))
 }
 
 async function handleTerminationSignal() {
@@ -236,25 +230,4 @@ async function handleTerminationSignal() {
     process.exit();
 }
 
-
-async function validate() {
-    let ipAddress = "127.0.0.1"
-    let dbAddress = undefined
-    let index = 1
-    let chunkSize = 64  
-    let swarmName = "caselaw"
-    let port = 60000
-
-    let test = {
-        ipAddress: ipAddress,
-        dbAddress: dbAddress,
-        index: index,
-        chunkSize: chunkSize,
-        swarmName: swarmName,
-        port: port
-    }
-    return await run(test)
-}
-
-//await validate()
 await run()
