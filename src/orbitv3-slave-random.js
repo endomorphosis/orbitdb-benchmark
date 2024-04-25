@@ -64,15 +64,16 @@ async function run () {
   process.on('SIGTERM', handleTerminationSignal);
   process.on('SIGINT', handleTerminationSignal);
   console.info('Script is running. Press CTRL+C to terminate.');
-  const id =  Array.from({length: 32}, () => Math.floor(Math.random() * 10)).join('')
+  // 3 digit random number 
+  const id =  Math.floor(100 + Math.random() * 900)
   const libp2p = await createLibp2p({  addresses: {
       listen: [`/ip4/${ipAddress}/tcp/0`]
     }, ...ipfsLibp2pOptions})
-  const blockstore = new LevelBlockstore(`./ipfs/2/blocks`)
+  const blockstore = new LevelBlockstore(`./ipfs/`+id+`/blocks`)
   ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, blockBrokers: [bitswap()]})
-  const identities = await Identities({ ipfs, path: `./orbitdb/2/identities` })
+  const identities = await Identities({ ipfs, path: `./orbitdb/`+id+`/identities` })
   const identity = identities.createIdentity({ id })
-  orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: `2`, directory: `./orbitdb/2`})
+  orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
 
   db = await orbitdb.open(dbAddress,
       {type: 'documents',
@@ -102,7 +103,7 @@ async function run () {
     }
   })
   console.info(`${new Date().toISOString()}running with db address ${db.address}`)
-  const wss = new WebSocketServer({ port: 8888 })
+  const wss = new WebSocketServer({ port: 8888 + id })
     wss.on('connection', (ws) => {
         console.log('New WebSocket connection');
         ws.on('message', (message) => {
