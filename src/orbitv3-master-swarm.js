@@ -13,7 +13,7 @@ import {mdns} from '@libp2p/mdns'
 import {LevelBlockstore} from 'blockstore-level'
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
-
+import fs from 'fs';
 const require = createRequire(import.meta.url);
 
 const ipfsLibp2pOptions = {
@@ -60,11 +60,12 @@ async function run(options = {}) {
     } else if (Object.keys(options).includes('ipAddress')){
         ipAddress = options.ipAddress
     }
-    else if (!argv.ipAddress) {
+    else if (argv.ipAddress) {
         ipAddress = argv.ipAddress
     }
-    if (!argv.swarmName && !Object.keys(options).includes('swarmName')) {
-        console.error('Please provide a swarm key');
+    
+    if (!argv.swarmName && !options.swarmName) {
+        console.error('Please provide a swarm Name');
         process.exit(1);
     }
     else if (Object.keys(options).includes('swarmName')) {
@@ -133,10 +134,34 @@ async function run(options = {}) {
             type: 'documents',
             AccessController: OrbitDBAccessController({write: ["*"]})
         })
-    config_json = fs.readFileSync('config.json', 'utf8');
-    config_json = JSON.parse(config_json);
-    config_json[index]["orbitdbAddress"] = db.address.toString();
-    fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
+    let config_json
+    if (fs.existsSync('config.json') === false) {
+        fs.writeFileSync('config.json', JSON.stringify([]), 'utf8');
+    }
+
+    if (fs.existsSync('config.json') === true) {
+        config_json = fs.readFileSync('config.json', 'utf8');
+        config_json = JSON.parse(config_json);
+        let config_json_length = Object.keys(config_json).length;
+        while((config_json_length - 1) < parseInt(index)) {
+            config_json.push({});
+            config_json_length = Object.keys(config_json).length;
+        }
+        if (Object.keys(config_json[index]).includes("orbitdbAddress") === true) {
+            config_json[index]["orbitdbAddress"] = db.address.toString();
+        }
+        else {
+            config_json[index] = {
+                index: index,
+                ipAddress: ipAddress,
+                port: port,
+                swarmName: swarmName,
+                orbitdbAddress: db.address.toString(),
+                chunkSize: chunkSize
+            };
+        }
+        fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
+    }
     console.info(`running with db address ${db.address}`)
     // Add a new WebSocket server
     const wss = new WebSocketServer({ port: port })
@@ -242,7 +267,7 @@ async function validate() {
     let dbAddress = undefined
     let index = 1
     let chunkSize = 64  
-    let swarmName = "caselaw"
+    let swarmName    = "caselaw"
     let port = 60000
 
     let test = {

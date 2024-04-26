@@ -13,13 +13,19 @@ const execPromise = promisify(exec);
 export function config(chunkSize, swarmName, port) {
 
     if (fs.existsSync('config.json') == false) {
-        fs.writeFileSync('config.json', JSON.stringify({}), 'utf8');
+        let array_of_chunks = [];
+        for (let i = 0; i < chunkSize; i++) {
+            array_of_chunks.push({
+                index: i,
+            });
+        }
+        fs.writeFileSync('config.json', JSON.stringify(array_of_chunks), 'utf8');
     }
 
     let config_json = fs.readFileSync('config.json', 'utf8');
     config_json = JSON.parse(config_json);
 
-    let chunkList = {};
+    let chunkList = [];
     for (let i = 0; i < chunkSize; i++) {
         if (!Object.keys(config_json).includes(i.toString())) {
             chunkList[i] = {
@@ -37,6 +43,7 @@ export function config(chunkSize, swarmName, port) {
 }
 
 
+
 export async function runSwarmMaster(chunkSize=0) {
     const portRange = 60000;
     let processes = [];
@@ -49,19 +56,22 @@ export async function runSwarmMaster(chunkSize=0) {
 
     let ps_command = "ps aux | grep 'node' | grep 'orbitv3-master-swarm.js' | grep -v grep | wc -l "
     let ps_results = execSync(ps_command, {stdio: 'pipe'}).toString().trim();
-    if (parseInt(ps_results) > 0)
-        let kill_command = "ps aux | grep 'node' | grep 'orbitv3-master-swarm.js' | awk '{print $2}' | xargs kill -9"
-        execSync(kill_command, {stdio: 'ignore', detached: true});
+    if (parseInt(ps_results) > 0) {
+        // let kill_command = "ps aux | grep 'node' | grep 'orbitv3-master-swarm.js' | awk '{print $2}' | xargs kill -9"
+        // execSync(kill_command, {stdio: 'ignore', detached: true});
     }
     let this_dir = process.cwd().replace("/src", "")
-    for (let i = 0; i < this_config.length ; i++) {
+    let this_config_length = Object.keys(this_config).length;
+    console.log("this_config")
+    console.log(this_config_length)
+    for (let i = 0; i < this_config_length ; i++) {
         const this_port = this_config[i].port;
         const this_chunkSize = this_config[i].chunkSize
         const this_swarmName = this_config[i].swarmName;
         const this_index = this_config[i].index + 1;
         let command = "node "+this_dir+"/src/orbitv3-master-swarm.js --ipAddress=127.0.0.1 " + "--port=" + this_port + " --swarmName=" + this_swarmName + " --chunkSize=" + this_chunkSize + " --index=" + this_index;
         console.log(command);
-        process_status[i] = exec(command, {stdio: 'ignore', detached: true}, (error, stdout, stderr) => {
+        processes[i] = exec(command, {shell: true, detached: true}, (error, stdout, stderr) => {
             if (error) {
                 console.error(`exec error: ${error}`);
                 process_message[i] = error;
@@ -71,32 +81,19 @@ export async function runSwarmMaster(chunkSize=0) {
                 console.log(`stdout: ${stdout}`);
                 process_message[i] = stdout;
             }
-        
-
-
-
-        // processes[i] = exec(command, {shell: true, detached: true}, (error, stdout, stderr) => {
-        //     if (error) { 
-        //         console.error(`exec error: ${error}`);
-        //         process_message[i] = error;
-        //         return;
-        //     }
-        //     if (stdout) {
-        //         console.log(`stdout: ${stdout}`);
-        //         process_message[i] = stdout;
-        //     }
-        // });
-
+        });
     }
     console.log('run_swarm.js: processes: ', processes);
-
-    let all_processes_dead = false;
-    while (true && all_processes_dead == false) {
-        await execPromise('sleep 1');
-        console.log('run_swarm.js: process_message: ', process_message);
-        console.log('run_swarm.js: process_status: ', process_status);
+    let config_json = fs.readFileSync('config.json', 'utf8');
+    let missing = 1
+    while ( missing > 0 && config_json.length > 0) {
+    //     await execPromise('sleep 1');
+        config_json = fs.readFileSync('config.json', 'utf8');
+        config_json = JSON.parse(config_json);
+        missing = config_json.map((c) => c.index).filter((i) => config_json[i].includes(orbitdbAddress) === true && config_json[i]["orbitdbAddress"] != "").length;   
     }
-    return false;
+    return true;
 }
 
-await runSwarmMaster(64);
+
+await runSwarmMaster(8);
