@@ -104,20 +104,10 @@ async function run(options = {}) {
         index = argv.index
     }
 
-    // console.log({
-    //     ipAddress,
-    //     dbAddress,
-    //     index,
-    //     chunkSize,
-    //     swarmName,
-    //     port
-    // })
-
     process.on('SIGTERM', handleTerminationSignal);
     process.on('SIGINT', handleTerminationSignal);
-    //console.info('Script is running. Press CTRL+C to terminate.');
-
     const id = index
+
     const libp2p = await createLibp2p({
         addresses: {
             listen: [`/ip4/${ipAddress}/tcp/0`]
@@ -261,8 +251,12 @@ async function handleTerminationSignal() {
     process.exit();
 }
 
-
 async function validate() {
+    // Add validation logic here
+    return true;
+}
+
+async function test() {
     let ipAddress = "127.0.0.1"
     let dbAddress = undefined
     let index = 1
@@ -281,5 +275,5 @@ async function validate() {
     return await run(test)
 }
 
-//await validate()
+//await test()
 await run()
