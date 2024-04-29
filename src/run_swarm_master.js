@@ -97,5 +97,4 @@ export async function initSwarmMaster(chunkSize=0) {
     }
 }
 
-
 await initSwarmMaster(8);

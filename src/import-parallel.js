@@ -6,7 +6,6 @@ const parent_dir = path.dirname("..");
 const resolve_path = path.resolve(parent_dir)
 const collection_path = path.join(resolve_path, 'collection.json');
 
-
 export function generate_random_vectors_fp16(dimensions, num_vectors){
 
     let vectors = [];
@@ -78,7 +77,5 @@ export default async function main(collection_path){
         });
     }
 }
-
-
 
 main(collection_path);
