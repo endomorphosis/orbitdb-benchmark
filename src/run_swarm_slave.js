@@ -41,7 +41,7 @@ export function config(chunkSize, swarmName, port) {
             };
         }
     }
-    fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
+    // fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
     return config_json;
 }
 
