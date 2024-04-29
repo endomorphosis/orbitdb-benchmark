@@ -24,11 +24,14 @@ export function config(chunkSize, swarmName, port) {
 
     let config_json = fs.readFileSync('config.json', 'utf8');
     config_json = JSON.parse(config_json);
-
+    let config_json_length = Object.keys(config_json).length;
     let chunkList = [];
-    for (let i = 0; i < chunkSize; i++) {
-        if (!Object.keys(config_json).includes(i.toString())) {
-            chunkList[i] = {
+    for (let i = 1; i < chunkSize + 1; i++) {
+        if (config_json_length < i) {
+            config_json[i] = {};
+        }
+        if (config_json[i].hasOwnProperty("index") === false){
+            config_json[i] = {
                 index: i,
                 ipAddress: "127.0.0.1",
                 port: port + i,
@@ -38,13 +41,13 @@ export function config(chunkSize, swarmName, port) {
             };
         }
     }
-    fs.writeFileSync('config.json', JSON.stringify(chunkList), 'utf8');
-    return chunkList;
+    fs.writeFileSync('config.json', JSON.stringify(config_json), 'utf8');
+    return config_json;
 }
 
 
 
-export async function runSwarmMaster(chunkSize=0) {
+export async function initSwarmMaster(chunkSize=0) {
     const portRange = 60000;
     let processes = [];
     let process_status = [];
@@ -61,10 +64,10 @@ export async function runSwarmMaster(chunkSize=0) {
         // execSync(kill_command, {stdio: 'ignore', detached: true});
     }
     let this_dir = process.cwd().replace("/src", "")
-    let this_config_length = Object.keys(this_config).length;
+    let this_config_length = Object.keys(this_config).length + 1;
     console.log("this_config")
     console.log(this_config_length)
-    for (let i = 0; i < this_config_length ; i++) {
+    for (let i = 1; i < this_config_length ; i++) {
         const this_port = this_config[i].port;
         const this_chunkSize = this_config[i].chunkSize
         const this_swarmName = this_config[i].swarmName;
@@ -88,12 +91,11 @@ export async function runSwarmMaster(chunkSize=0) {
     let missing = 1
     while ( missing > 0 && config_json.length > 0) {
     //     await execPromise('sleep 1');
-        config_json = fs.readFileSync('config.json', 'utf8');
-        config_json = JSON.parse(config_json);
-        missing = config_json.map((c) => c.index).filter((i) => config_json[i].includes(orbitdbAddress) === true && config_json[i]["orbitdbAddress"] != "").length;   
+        //config_json = fs.readFileSync('config.json', 'utf8');
+        //config_json = JSON.parse(config_json);
+        //missing = config_json.map((c) => c.index).filter((i) => config_json[i].includes(orbitdbAddress) === true && config_json[i]["orbitdbAddress"] != "").length;   
     }
-    return true;
 }
 
 
-await runSwarmMaster(8);
+await initSwarmMaster(8);

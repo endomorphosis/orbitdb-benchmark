@@ -46,7 +46,7 @@ let ipfs
 let orbitdb
 let db
 
-async function run(options = {}) {
+async function run(options) {
     process.env.LIBP2P_FORCE_PNET = "1"
     const argv = require('minimist')(process.argv.slice(2))
     let ipAddress
@@ -258,15 +258,15 @@ async function validate() {
 
 async function test() {
     let ipAddress = "127.0.0.1"
-    let dbAddress = undefined
-    let index = 1
-    let chunkSize = 64  
-    let swarmName    = "caselaw"
-    let port = 60000
+    let orbitdbAddress = undefined
+    let index = 4
+    let chunkSize = 8  
+    let swarmName = "caselaw"
+    let port = 60003
 
     let test = {
         ipAddress: ipAddress,
-        dbAddress: dbAddress,
+        orbitdbAddress: orbitdbAddress,
         index: index,
         chunkSize: chunkSize,
         swarmName: swarmName,
@@ -276,4 +276,4 @@ async function test() {
 }
 
 //await test()
-await run()
+await run({})
