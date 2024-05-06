@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-	"import_test": "node import_hf_dataset.js"
+    "import_test": "node import_hf_dataset.js"
   },
   "keywords": [
     "AGW",
@@ -28,6 +28,8 @@
     "@orbitdb/core": "^2.0.1",
     "blockstore-level": "^1.1.7",
     "bson": "^6.2.0",
+    "fp16": "^0.2.0",
+    "half": "^0.0.1",
     "helia": "^3.0.1",
     "libp2p": "^1.2.0",
     "minimist": "^1.2.8",

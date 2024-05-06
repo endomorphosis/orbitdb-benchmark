@@ -52,27 +52,42 @@ export default async function main(collection_path){
     let config = fs.readFileSync('config.json', 'utf8');
     let config_json = JSON.parse(config);
     let ws_list = [];
-    for (let i = 0; i < chunkSize; i++){
-        let chunk = vectors_chunks[i];
+    for (let i = 1; i < chunkSize +1; i++){
+        let chunk = vectors_chunks[i];  
         let port = config_json[i].port;
         let ipAddress = config_json[i].ipAddress;
         let swarmName = config_json[i].swarmName;
         let index = config_json[i].index;
         let dbAddress = config_json[i].orbitdbAddress;
         let id = index;
-        ws_list[i] = new WebSocket('ws://localhost:'+port);
-        ws_list[i].on('open', () => {
-            for (let i = 0; i < Object.keys(chunk).length; i++){
-                let id = Object.keys(chunk)[i];
-                let cid = chunk[id];
-                ws.send(
+        ws_list[i] = new WebSocket('ws://127.0.0.1:'+port);
+        ws_list[i].on('open', (this_socket) => {
+            for (let j = 0; j < Object.keys(chunk).length; j++){
+                let id = Object.keys(chunk)[j];
+                let item = chunk[id];
+                let cid = item.value;
+                let key = item.key;
+                // convert fp_16 array to array of base64 strings
+                let char_array = '';
+                let key_base64 = key.map((x) => {
+                    // let string = Buffer.alloc(4);
+                    // let buffer = Buffer.alloc(2);
+                    // let fp16 = half(x);
+                    // buffer.writeUInt16LE(fp16);
+                    // string.writeFloatLE(x);
+                    // char_array += string.toString();
+                    // let x_base64 = string.toString();
+                    // return x_base64;
+                })
+
+                ws_list[i].send(
                     JSON.stringify({
                        'insert':{ _id: id, content: cid }
                     })
                 )
             }
         });
-        ws.on('message', (message) => {
+        ws_list[i].on('message', (message) => {
             console.log('Received message:', message.toString());
         });
     }

@@ -1,7 +1,6 @@
 import {ChildProcess, execSync, spawn} from 'child_process';
 import { exec } from 'child_process';
 import child_process from 'child_process'
-
 import { parse } from 'path';
 import {promisify} from 'util';
 import os from 'os';
@@ -45,8 +44,6 @@ export function config(chunkSize, swarmName, port) {
     return config_json;
 }
 
-
-
 export async function initSwarmMaster(chunkSize=0) {
     const portRange = 60000;
     let processes = [];
@@ -64,14 +61,15 @@ export async function initSwarmMaster(chunkSize=0) {
         // execSync(kill_command, {stdio: 'ignore', detached: true});
     }
     let this_dir = process.cwd().replace("/src", "")
-    let this_config_length = Object.keys(this_config).length + 1;
+    let this_config_length = Object.keys(this_config).length;
     console.log("this_config")
     console.log(this_config_length)
-    for (let i = 1; i < this_config_length ; i++) {
+    for (let i = 1; i < this_config_length && i < chunkSize + 1; i++) {
+        //console.log("this_config[i]: ", this_config[i])
         const this_port = this_config[i].port;
         const this_chunkSize = this_config[i].chunkSize
         const this_swarmName = this_config[i].swarmName;
-        const this_index = this_config[i].index + 1;
+        const this_index = this_config[i].index;
         let command = "node "+this_dir+"/src/orbitv3-master-swarm.js --ipAddress=127.0.0.1 " + "--port=" + this_port + " --swarmName=" + this_swarmName + " --chunkSize=" + this_chunkSize + " --index=" + this_index;
         console.log(command);
         processes[i] = exec(command, {shell: true, detached: true}, (error, stdout, stderr) => {
@@ -86,7 +84,7 @@ export async function initSwarmMaster(chunkSize=0) {
             }
         });
     }
-    console.log('run_swarm.js: processes: ', processes);
+    //console.log('run_swarm.js: processes: ', processes);
     let config_json = fs.readFileSync('config.json', 'utf8');
     let missing = 1
     while ( missing > 0 && config_json.length > 0) {
