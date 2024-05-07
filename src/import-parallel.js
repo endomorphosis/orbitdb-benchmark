@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws';
 import fs from 'fs';
 import path from 'path';
+import  { Float16Array, getFloat16, setFloat16 } from '@petamoriken/float16';
 
 const parent_dir = path.dirname("..");
 const resolve_path = path.resolve(parent_dir)
@@ -43,6 +44,36 @@ export function generate_random_vector_shards(shard_num, dimensions, num_vectors
     return vector_shards;
 }
 
+function floatTo16BitBytes(value) {
+    if (value < -1 || value > 1) {
+        throw new Error('Value must be between -1 and 1.');
+    }
+
+    // Scale float from [-1, 1] to [-32768, 32767]
+    const scaled = Math.floor(value * 32767);
+
+    // Convert to 16-bit signed integer
+    const buffer = new ArrayBuffer(2);
+    const view = new DataView(buffer);
+    view.setInt16(0, scaled, true); // true for littleEndian
+
+    // Get bytes
+    const byte1 = view.getUint8(0);
+    const byte2 = view.getUint8(1);
+    return [byte1, byte2];
+}
+
+function float16VectorToBase64(vector) {
+    let byte_array = [];
+    for (let i = 0; i < vector.length; i++){
+        let this_bytes = floatTo16BitBytes(vector[i]);
+        byte_array.push(this_bytes[0]);
+        byte_array.push(this_bytes[1]);
+    }
+    //convert byte_array to base64
+    let base64 = Buffer.from(byte_array).toString('base64');
+    return base64;
+}
 
 export default async function main(collection_path){
     let chunkSize = 8;
@@ -52,6 +83,11 @@ export default async function main(collection_path){
     let config = fs.readFileSync('config.json', 'utf8');
     let config_json = JSON.parse(config);
     let ws_list = [];
+    let first_send = Date.now();
+    let first_recv;
+    let final_recv;
+    let delta_time;
+    let recieved_count = 0;
     for (let i = 1; i < chunkSize +1; i++){
         let chunk = vectors_chunks[i];  
         let port = config_json[i].port;
@@ -62,35 +98,51 @@ export default async function main(collection_path){
         let id = index;
         ws_list[i] = new WebSocket('ws://127.0.0.1:'+port);
         ws_list[i].on('open', (this_socket) => {
-            for (let j = 0; j < Object.keys(chunk).length; j++){
+            for (let j = 0; chunk != undefined && j < Object.keys(chunk).length; j++){
                 let id = Object.keys(chunk)[j];
                 let item = chunk[id];
                 let cid = item.value;
-                let key = item.key;
+                let key = float16VectorToBase64(item.key);
                 // convert fp_16 array to array of base64 strings
-                let char_array = '';
-                let key_base64 = key.map((x) => {
-                    // let string = Buffer.alloc(4);
-                    // let buffer = Buffer.alloc(2);
-                    // let fp16 = half(x);
-                    // buffer.writeUInt16LE(fp16);
-                    // string.writeFloatLE(x);
-                    // char_array += string.toString();
-                    // let x_base64 = string.toString();
-                    // return x_base64;
-                })
-
                 ws_list[i].send(
                     JSON.stringify({
-                       'insert':{ _id: id, content: cid }
+                       'insert':{ _id: key, content: cid }
                     })
                 )
             }
         });
         ws_list[i].on('message', (message) => {
-            console.log('Received message:', message.toString());
+            //console.log('Received message:', message.toString());
+            recieved_count++;
+            //console.log("Recieved count: ", recieved_count);
+            if (recieved_count == (chunkSize -1) * num_vectors - 1){
+                console.log("All messages recieved");
+                final_recv = Date.now();
+                delta_time = final_recv - first_send;
+                // in seconds
+                delta_time = delta_time / 1000;
+                console.log("Time to final message recieved: ")
+                console.log(delta_time);
+                process.exit();                
+            }
+            if (recieved_count == 1){
+                console.log("first message recieved");
+                first_recv = Date.now();
+                delta_time = first_recv - first_send;
+                // in seconds
+                delta_time = delta_time / 1000;
+                console.log("Time to first message recieved: ")
+                console.log(delta_time);
+            }
         });
     }
+    console.log("All messages sent");
+    console.log("Time to send all messages: ");
+    let finish_send = Date.now();
+    delta_time = finish_send - first_send;
+    // in seconds
+    delta_time = delta_time / 1000;
+    console.log(delta_time);
 }
 
 main(collection_path);

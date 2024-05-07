@@ -32,3 +32,12 @@ Import collection.json
 ~~~shell
 node import-collection.js
 ~~~
+
+
+insert 32k master
+first message recieved
+Time to first message recieved: 
+60.609
+All messages recieved
+Time to final message recieved: 
+91.28
