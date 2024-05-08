@@ -88,7 +88,7 @@ export default async function main(collection_path){
     let final_recv;
     let delta_time;
     let recieved_count = 0;
-    for (let i = 1; i < chunkSize +1; i++){
+    for (let i = 0; i < chunkSize; i++){
         let chunk = vectors_chunks[i];  
         let port = config_json[i].port;
         let ipAddress = config_json[i].ipAddress;
@@ -115,7 +115,7 @@ export default async function main(collection_path){
             //console.log('Received message:', message.toString());
             recieved_count++;
             //console.log("Recieved count: ", recieved_count);
-            if (recieved_count == (chunkSize -1) * num_vectors - 1){
+            if (recieved_count == (chunkSize) * num_vectors - 1){
                 console.log("All messages recieved");
                 final_recv = Date.now();
                 delta_time = final_recv - first_send;

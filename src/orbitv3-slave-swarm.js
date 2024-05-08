@@ -109,7 +109,7 @@ async function run () {
         }
     })
     console.info(`${new Date().toISOString()}running with db address ${db.address}`)
-    const wss = new WebSocketServer({ port: 8888 + id })
+    const wss = new WebSocketServer({ port: port })
     wss.on('connection', (ws) => {
         console.log('New WebSocket connection');
         ws.on('message', (message) => {
@@ -196,22 +196,26 @@ async function run () {
             }
         });
     });
+    let ingest_port = port - 30000
+    ws = new WebSocket('ws://127.0.0.1:'+ingest_port);
     console.info(`${new Date().toISOString()} getting updates ...`)
     db.events.on('update', async (entry) => {
         console.debug(`new head entry op ${entry.payload.op} with value ${JSON.stringify(entry.payload.value)}`)
         if (oldHeads) {
             for (let hash of Array.from(oldHeads, h => h.hash)) {
-            let it = db.log.iterator({gt: hash, lte: entry.hash})
-            for await (let entry of it) {
-                console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
-                oldHeads = [entry]
-            }
+                let it = db.log.iterator({gt: hash, lte: entry.hash})
+                for await (let entry of it) {
+                    console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
+                    oldHeads = [entry]
+                    ws.send(JSON.stringify({ "ingest" : entry.payload }))
+                }
             }
         } else {
             let it = db.log.iterator({lte: entry.hash})
             for await (let entry of it) {
-            console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
-            oldHeads = [entry]
+                console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
+                oldHeads = [entry]
+                ws.send(JSON.stringify({ "ingest" : entry.payload }))
             }
         }
     })

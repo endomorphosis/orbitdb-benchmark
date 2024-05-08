@@ -75,7 +75,7 @@ export async function initSwarmSlave(chunkSize=0) {
         const this_index = this_config[i].index;
         let command = "node "+this_dir+"/src/orbitv3-slave-swarm.js --ipAddress=127.0.0.1 " + "--port=" + this_port + " --swarmName=" + this_swarmName + " --chunkSize=" + this_chunkSize + " --index=" + this_index;
         console.log(command);
-        processes[i] = exec(command, {shell: true, detached: true}, (error, stdout, stderr) => {
+        processes[i] = exec(command, {shell: true, detached: false}, (error, stdout, stderr) => {
             if (error) {
                 console.error(`exec error: ${error}`);
                 process_message[i] = error;
