@@ -64,7 +64,7 @@ export async function initSwarmMaster(chunkSize=0) {
     let this_config_length = Object.keys(this_config).length;
     console.log("this_config")
     console.log(this_config_length)
-    for (let i = 1; i < this_config_length && i < chunkSize + 1; i++) {
+    for (let i = 0; i < this_config_length && i < chunkSize; i++) {
         //console.log("this_config[i]: ", this_config[i])
         const this_port = this_config[i].port;
         const this_chunkSize = this_config[i].chunkSize
@@ -72,7 +72,7 @@ export async function initSwarmMaster(chunkSize=0) {
         const this_index = this_config[i].index;
         let command = "node "+this_dir+"/src/orbitv3-master-swarm.js --ipAddress=127.0.0.1 " + "--port=" + this_port + " --swarmName=" + this_swarmName + " --chunkSize=" + this_chunkSize + " --index=" + this_index;
         console.log(command);
-        processes[i] = exec(command, {shell: true, detached: true}, (error, stdout, stderr) => {
+        processes[i] = exec(command, {shell: true, detached: false}, (error, stdout, stderr) => {
             if (error) {
                 console.error(`exec error: ${error}`);
                 process_message[i] = error;
