@@ -29,6 +29,7 @@
     "@petamoriken/float16": "^3.8.6",
     "blockstore-level": "^1.1.7",
     "bson": "^6.2.0",
+    "datastore-level": "^10.1.8",
     "fp16": "^0.2.0",
     "half": "^0.0.1",
     "helia": "^3.0.1",

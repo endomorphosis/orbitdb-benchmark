@@ -8,6 +8,7 @@ import {bitswap} from '@helia/block-brokers'
 import {tcp} from '@libp2p/tcp'
 import {mdns} from '@libp2p/mdns'
 import {LevelBlockstore} from 'blockstore-level'
+import { LevelDatastore } from "datastore-level";
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
 import { noise } from '@chainsafe/libp2p-noise'
@@ -42,9 +43,9 @@ const ipfsLibp2pOptions = {
         noise()
     ],
     peerDiscovery: [
-        // mdns({
-        //     interval: 20e3
-        // }),
+        mdns({
+            interval: 20e3
+        }),
         pubsubPeerDiscovery({
             interval: 1000
         }),
@@ -57,9 +58,7 @@ const ipfsLibp2pOptions = {
         pubsub:
             gossipsub({
                 allowPublishToZeroPeers: true
-            },
-            floodsub(),
-        ),
+            }),
         identify: identify(),
     },
     connectionManager: {
@@ -109,7 +108,8 @@ async function run () {
         listen: ['/ip4/0.0.0.0/tcp/0']
         }, ...ipfsLibp2pOptions})
     const blockstore = new LevelBlockstore(`./ipfs/`+id+`/blocks`)
-    ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, blockBrokers: [bitswap()]})
+    const datastore = new LevelDatastore(`./ipfs/`+id+`/datastore`);
+    ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, datastore: datastore, blockBrokers: [bitswap()]})
     const identities = await Identities({ ipfs, path: `./orbitdb/`+id+`/identities` })
     const identity = identities.createIdentity({ id })
     orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
