@@ -14,10 +14,14 @@ import {LevelBlockstore} from 'blockstore-level'
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
 import fs from 'fs';
+import { bootstrap } from '@libp2p/bootstrap'
+import { floodsub } from '@libp2p/floodsub'
+import { mplex } from '@libp2p/mplex'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 
 const require = createRequire(import.meta.url);
 let bootstrappers = []
-const dfsdf = {
+const ipfsLibp2pOptions = {
     transports: [
         tcp(),
     ],
