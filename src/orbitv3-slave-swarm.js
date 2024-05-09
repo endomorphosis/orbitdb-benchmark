@@ -12,32 +12,48 @@ import {mdns} from '@libp2p/mdns'
 import {LevelBlockstore} from 'blockstore-level'
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
+import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@chainsafe/libp2p-yamux'
+import { bootstrap } from '@libp2p/bootstrap'
+import { floodsub } from '@libp2p/floodsub'
+import { mplex } from '@libp2p/mplex'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 
 const require = createRequire(import.meta.url);
+let bootstrappers = []
+const dfsdf = {
+    transports: [
+        tcp(),
+    ],
+    streamMuxers: [
+        yamux(),
+        mplex()
+    ],
+    connectionEncryption: [
+        noise()
+    ],
+    peerDiscovery: [
+        mdns({
+            interval: 20e3
+        }),
+        pubsubPeerDiscovery({
+            interval: 1000
+        }),
+    ],
+    services: {
+        pubsub: gossipsub({
+            allowPublishToZeroPeers: true
+        }),
+        identify: identify()
+    },
+    connectionManager: {
 
-const ipfsLibp2pOptions = {
-  transports: [
-    tcp(),
-  ],
-  streamMuxers: [
-    yamux()
-  ],
-  connectionEncryption: [
-    noise()
-  ],
-  peerDiscovery: [
-    mdns({
-      interval: 20e3
-    })
-  ],
-  services: {
-    pubsub: gossipsub({
-      allowPublishToZeroPeers: true
-    }),
-    identify: identify()
-  },
-  connectionManager: {
-  }
+    }
+}
+if (bootstrappers.length > 0) {
+    ipfsLibp2pOptions.peerDiscovery.push(bootstrap({
+        list: bootstrappers
+    }))
 }
 
 EventEmitter.defaultMaxListeners = 20;

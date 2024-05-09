@@ -14,14 +14,16 @@ import {LevelBlockstore} from 'blockstore-level'
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
 import fs from 'fs';
-const require = createRequire(import.meta.url);
 
-const ipfsLibp2pOptions = {
+const require = createRequire(import.meta.url);
+let bootstrappers = []
+const dfsdf = {
     transports: [
         tcp(),
     ],
     streamMuxers: [
-        yamux()
+        yamux(),
+        mplex()
     ],
     connectionEncryption: [
         noise()
@@ -29,7 +31,10 @@ const ipfsLibp2pOptions = {
     peerDiscovery: [
         mdns({
             interval: 20e3
-        })
+        }),
+        pubsubPeerDiscovery({
+            interval: 1000
+        }),
     ],
     services: {
         pubsub: gossipsub({
@@ -37,7 +42,15 @@ const ipfsLibp2pOptions = {
         }),
         identify: identify()
     },
-    connectionManager: {}
+    connectionManager: {
+
+    }
+}
+
+if (bootstrappers.length > 0) {
+    ipfsLibp2pOptions.peerDiscovery.push(bootstrap({
+        list: bootstrappers
+    }))
 }
 
 EventEmitter.defaultMaxListeners = 20;
