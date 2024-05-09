@@ -13,6 +13,10 @@ import {mdns} from '@libp2p/mdns'
 import {LevelBlockstore} from 'blockstore-level'
 import {createRequire} from "module";
 import { WebSocketServer } from 'ws'
+import { webSockets } from '@libp2p/websockets'
+import { webRTC } from '@libp2p/webrtc'
+import { all } from '@libp2p/websockets/filters'
+import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 
 const require = createRequire(import.meta.url);
 
