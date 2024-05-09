@@ -16,6 +16,30 @@ import { WebSocketServer } from 'ws'
 
 const require = createRequire(import.meta.url);
 
+export const DefaultLibp2pOptions = {
+    addresses: {
+      listen: ['/ip4/0.0.0.0/tcp/0/ws']
+    },
+    transports: [
+      webSockets({
+        filter: all
+      }),
+      webRTC(),
+      circuitRelayTransport({
+        discoverRelays: 1
+      })
+    ],
+    connectionEncryption: [noise()],
+    streamMuxers: [yamux()],
+    connectionGater: {
+      denyDialMultiaddr: () => false
+    },
+    services: {
+      identify: identify(),
+      pubsub: gossipsub({ allowPublishToZeroTopicPeers: true })
+    }
+  }
+
 const ipfsLibp2pOptions = {
     transports: [
         tcp(),
@@ -62,7 +86,7 @@ async function run() {
 
     const libp2p = await createLibp2p({
         addresses: {
-            listen: ['/ip4/0.0.0.0/tcp/0']
+            listen: ['/ip4/0.0.0.0/tcp/0/ws']
             // listen: [`/ip4/${ipAddress}/tcp/0`]
         }, ...ipfsLibp2pOptions
     })

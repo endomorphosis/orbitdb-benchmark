@@ -15,6 +15,30 @@ import { WebSocketServer } from 'ws'
 
 const require = createRequire(import.meta.url);
 
+export const DefaultLibp2pOptions = {
+  addresses: {
+    listen: ['/ip4/0.0.0.0/tcp/0/ws']
+  },
+  transports: [
+    webSockets({
+      filter: all
+    }),
+    webRTC(),
+    circuitRelayTransport({
+      discoverRelays: 1
+    })
+  ],
+  connectionEncryption: [noise()],
+  streamMuxers: [yamux()],
+  connectionGater: {
+    denyDialMultiaddr: () => false
+  },
+  services: {
+    identify: identify(),
+    pubsub: gossipsub({ allowPublishToZeroTopicPeers: true })
+  }
+}
+
 const ipfsLibp2pOptions = {
   transports: [
     tcp(),
@@ -66,11 +90,11 @@ async function run () {
   console.info('Script is running. Press CTRL+C to terminate.');
   const id =  Array.from({length: 32}, () => Math.floor(Math.random() * 10)).join('')
   const libp2p = await createLibp2p({  addresses: {
-      listen: ['/ip4/0.0.0.0/tcp/0']
+      listen: ['/ip4/0.0.0.0/tcp/0/ws']
       // listen: [`/ip4/${ipAddress}/tcp/0`]
     }, ...ipfsLibp2pOptions})
   const blockstore = new LevelBlockstore(`./ipfs/2/blocks`)
-  ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, blockBrokers: [bitswap()]})
+  ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p})
   const identities = await Identities({ ipfs, path: `./orbitdb/2/identities` })
   const identity = identities.createIdentity({ id })
   orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: `2`, directory: `./orbitdb/2`})

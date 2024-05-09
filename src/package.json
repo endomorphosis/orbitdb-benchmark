@@ -27,7 +27,7 @@
     "@libp2p/tcp": "^9.0.12",
     "@libp2p/webrtc": "^4.0.16",
     "@libp2p/websockets": "^8.0.12",
-    "@orbitdb/core": "^2.0.1",
+    "@orbitdb/core": "^2.2.0",
     "blockstore-level": "^1.1.7",
     "bson": "^6.2.0",
     "helia": "^3.0.1",
