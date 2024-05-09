@@ -18,6 +18,8 @@ import { floodsub } from '@libp2p/floodsub'
 import { mplex } from '@libp2p/mplex'
 import { kadDHT } from '@libp2p/kad-dht'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { WebSocket } from 'ws';
+
 
 const require = createRequire(import.meta.url);
 let bootstrappers = [
@@ -77,26 +79,61 @@ let ipfs
 let orbitdb
 let db
 
-async function run () {
+async function run(options) {
+    process.env.LIBP2P_FORCE_PNET = "1"
     const argv = require('minimist')(process.argv.slice(2))
     let ipAddress
     let dbAddress
     let index
-    if (!argv.ipAddress) {
+    let chunkSize
+    let swarmName
+    let port
+    if (!argv.ipAddress && !Object.keys(options).includes('ipAddress')) {
         ipAddress = "127.0.0.1"
-    } else {
+    } else if (Object.keys(options).includes('ipAddress')){
+        ipAddress = options.ipAddress
+    }
+    else if (argv.ipAddress) {
         ipAddress = argv.ipAddress
     }
-    if (!argv.dbAddress) {
-        dbAddress = "/orbitdb/zdpuB31L6gJz49erikZSQT3A1erJbid8oUTBrjLtBwjjXe3R5"
+    
+    if (!argv.swarmName && !options.swarmName) {
+        console.error('Please provide a swarm Name');
+        process.exit(1);
     }
-    else {
-        dbAddress = argv.dbAddress
+    else if (Object.keys(options).includes('swarmName')) {
+        swarmName = options.swarmName
     }
-    if (!argv.index) {
+    else if (argv.swarmName) {
+        swarmName = argv.swarmName
+    }
+    
+    if (!argv.port && !Object.keys(options).includes('port')) {
+        console.error('Please provide a port number');
+        process.exit(1);
+    }else if (Object.keys(options).includes('port')) {
+        port = options.port
+    }else if (argv.port) {
+        port = argv.port
+    }
+
+    if (!argv.chunkSize && !Object.keys(options).includes('chunkSize')) {
+        console.error('Please provide a chunk size');
+        process.exit(1);
+    }else if (Object.keys(options).includes('chunkSize')) {
+        chunkSize = options.chunkSize
+    }else if (argv.chunkSize) {
+        chunkSize = argv.chunkSize
+    }
+
+    if (!argv.index && !Object.keys(options).includes('index')) {
         console.error('Please provide an index');
+        process.exit(1);
     }
-    else {
+    else if (Object.keys(options).includes('index')) {
+        index = options.index
+    }
+    else if (argv.index) {
         index = argv.index
     }
     process.on('SIGTERM', handleTerminationSignal);
@@ -114,7 +151,7 @@ async function run () {
     const identity = identities.createIdentity({ id })
     orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
 
-    db = await orbitdb.open(dbAddress,
+    db = await orbitdb.open(swarmName+"-"+index+"-of-"+chunkSize,
         {type: 'documents',
             AccessController: OrbitDBAccessController({ write: ["*"], sync: false}),
         })
@@ -123,7 +160,7 @@ async function run () {
     await new Promise(r => setTimeout(r, 5000));
     await db.close()
     console.debug(`${new Date().toISOString()} opening db for sync`)
-    db = await orbitdb.open(dbAddress,
+    db = await orbitdb.open(swarmName+"-"+index+"-of-"+chunkSize,
         {type: 'documents',
             AccessController: OrbitDBAccessController({ write: ["*"]}),
         })
@@ -230,7 +267,7 @@ async function run () {
         });
     });
     let ingest_port = port - 30000
-    ws = new WebSocket('ws://127.0.0.1:'+ingest_port);
+    let ws = new WebSocket('ws://127.0.0.1:'+ingest_port);
     console.info(`${new Date().toISOString()} getting updates ...`)
     db.events.on('update', async (entry) => {
         console.debug(`new head entry op ${entry.payload.op} with value ${JSON.stringify(entry.payload.value)}`)
@@ -267,4 +304,4 @@ async function handleTerminationSignal() {
     process.exit();
 }
 
-await run()
+await run({})
