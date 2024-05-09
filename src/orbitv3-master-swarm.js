@@ -62,7 +62,7 @@ const ipfsLibp2pOptions = {
             floodsub(),
         ),
         identify: identify(),
-        kadDHT: kadDHT(),
+        // kadDHT: kadDHT(),
     },
     connectionManager: {
 

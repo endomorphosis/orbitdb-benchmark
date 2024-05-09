@@ -53,6 +53,7 @@ const ipfsLibp2pOptions = {
         })
     ],
     services: {
+        //kadDHT: kadDHT(),
         pubsub:
             gossipsub({
                 allowPublishToZeroPeers: true
@@ -60,7 +61,6 @@ const ipfsLibp2pOptions = {
             floodsub(),
         ),
         identify: identify(),
-        kadDHT: kadDHT(),
     },
     connectionManager: {
 
