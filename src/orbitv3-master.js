@@ -62,7 +62,8 @@ async function run() {
 
     const libp2p = await createLibp2p({
         addresses: {
-            listen: [`/ip4/${ipAddress}/tcp/0`]
+            listen: ['/ip4/0.0.0.0/tcp/0']
+            // listen: [`/ip4/${ipAddress}/tcp/0`]
         }, ...ipfsLibp2pOptions
     })
     const blockstore = new LevelBlockstore(`./ipfs/1/blocks`)
