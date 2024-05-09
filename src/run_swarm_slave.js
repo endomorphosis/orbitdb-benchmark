@@ -26,14 +26,14 @@ export function config(chunkSize, swarmName, port) {
     let config_json_length = Object.keys(config_json).length;
     let chunkList = [];
     console.log(config_json)
-    for (let i = 1; i < chunkSize; i++) {
+    for (let i = 0; i < chunkSize; i++) {
         if (config_json_length < i) {
             config_json[i] = {};
         }
         let tmp_type = typeof config_json[i];
         if (typeof config_json[i] == 'object' && config_json[i].hasOwnProperty("index") === false){
             config_json[i] = {
-                index: i,
+                index: i + 1,
                 ipAddress: "127.0.0.1",
                 port: port + i,
                 swarmName: swarmName,
