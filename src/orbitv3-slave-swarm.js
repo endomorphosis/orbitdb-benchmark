@@ -87,7 +87,8 @@ async function run () {
     console.info('Script is running. Press CTRL+C to terminate.');
     const id =  index
     const libp2p = await createLibp2p({  addresses: {
-        listen: [`/ip4/${ipAddress}/tcp/0`]
+        //listen: [`/ip4/${ipAddress}/tcp/0`]
+        listen: ['/ip4/0.0.0.0/tcp/0']
         }, ...ipfsLibp2pOptions})
     const blockstore = new LevelBlockstore(`./ipfs/`+id+`/blocks`)
     ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, blockBrokers: [bitswap()]})
