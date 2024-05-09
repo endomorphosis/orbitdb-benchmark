@@ -18,9 +18,17 @@ import { bootstrap } from '@libp2p/bootstrap'
 import { floodsub } from '@libp2p/floodsub'
 import { mplex } from '@libp2p/mplex'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { kadDHT } from '@libp2p/kad-dht'
 
 const require = createRequire(import.meta.url);
-let bootstrappers = []
+let bootstrappers = [
+    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+    '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+  ]
 const ipfsLibp2pOptions = {
     addresses: {
         listen: ['/ip4/0.0.0.0/tcp/0']
@@ -36,12 +44,15 @@ const ipfsLibp2pOptions = {
         noise()
     ],
     peerDiscovery: [
-        mdns({
-            interval: 20e3
-        }),
+        // mdns({
+        //     interval: 20e3
+        // }),
         pubsubPeerDiscovery({
             interval: 1000
         }),
+        bootstrap({
+            list: bootstrappers
+        })
     ],
     services: {
         pubsub:
@@ -50,7 +61,8 @@ const ipfsLibp2pOptions = {
             },
             floodsub(),
         ),
-        identify: identify()
+        identify: identify(),
+        kadDHT: kadDHT(),
     },
     connectionManager: {
 
