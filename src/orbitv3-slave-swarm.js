@@ -3,8 +3,6 @@ import {createHelia} from 'helia'
 import {EventEmitter} from "events";
 import {createLibp2p} from 'libp2p'
 import {identify} from '@libp2p/identify'
-import {noise} from '@chainsafe/libp2p-noise'
-import {yamux} from '@chainsafe/libp2p-yamux'
 import {gossipsub} from '@chainsafe/libp2p-gossipsub'
 import {bitswap} from '@helia/block-brokers'
 import {tcp} from '@libp2p/tcp'
@@ -21,7 +19,7 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 
 const require = createRequire(import.meta.url);
 let bootstrappers = []
-const dfsdf = {
+const ipfsLibp2pOptions = {
     transports: [
         tcp(),
     ],

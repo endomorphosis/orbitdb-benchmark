@@ -25,11 +25,13 @@ export function config(chunkSize, swarmName, port) {
     config_json = JSON.parse(config_json);
     let config_json_length = Object.keys(config_json).length;
     let chunkList = [];
-    for (let i = 1; i < chunkSize + 1; i++) {
+    console.log(config_json)
+    for (let i = 1; i < chunkSize; i++) {
         if (config_json_length < i) {
             config_json[i] = {};
         }
-        if (config_json[i].hasOwnProperty("index") === false){
+        let tmp_type = typeof config_json[i];
+        if (typeof config_json[i] == 'object' && config_json[i].hasOwnProperty("index") === false){
             config_json[i] = {
                 index: i,
                 ipAddress: "127.0.0.1",
