@@ -22,6 +22,9 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 const require = createRequire(import.meta.url);
 let bootstrappers = []
 const ipfsLibp2pOptions = {
+    addresses: {
+        listen: ['/ip4/0.0.0.0/tcp/0']
+    },
     transports: [
         tcp(),
     ],
@@ -41,9 +44,12 @@ const ipfsLibp2pOptions = {
         }),
     ],
     services: {
-        pubsub: gossipsub({
-            allowPublishToZeroPeers: true
-        }),
+        pubsub:
+            gossipsub({
+                allowPublishToZeroPeers: true
+            },
+            floodsub(),
+        ),
         identify: identify()
     },
     connectionManager: {
