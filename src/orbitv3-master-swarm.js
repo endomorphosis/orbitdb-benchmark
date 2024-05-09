@@ -149,7 +149,7 @@ async function run(options) {
         }, ...ipfsLibp2pOptions
     })
     const blockstore = new LevelBlockstore(`./ipfs/`+id+`/blocks`)
-    const datastore = new LevelDatastore(ipfsDSDirectory);
+    const datastore = new LevelDatastore(`./ipfs/`+id+`/datastore`);
     ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, datastore: datastore, blockBrokers: [bitswap()]})
     const identities = await Identities({ipfs, path: `./orbitdb/`+id+`/identities`})
     identities.createIdentity({id}) // Remove the unused variable 'identity'
