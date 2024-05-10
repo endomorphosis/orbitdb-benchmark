@@ -17,12 +17,18 @@ import { webSockets } from '@libp2p/websockets'
 import { webRTC } from '@libp2p/webrtc'
 import { all } from '@libp2p/websockets/filters'
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
-
+import { kadDHT, removePublicAddressesMapper } from '@libp2p/kad-dht'
+import { peerIdFromString } from '@libp2p/peer-id'
+import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
+import { WebSocket } from 'ws';
+import { webSockets } from '@libp2p/websockets';
+import { webRTC } from '@libp2p/webrtc';
+import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 const require = createRequire(import.meta.url);
 
 export const DefaultLibp2pOptions = {
     addresses: {
-      listen: ['/ip4/0.0.0.0/tcp/0/ws']
+      listen: ['/ip4/0.0.0.0/tcp/0/']
     },
     transports: [
       webSockets({
@@ -34,21 +40,47 @@ export const DefaultLibp2pOptions = {
       })
     ],
     peerDiscovery: [
-        mdns({
-        interval: 20e3
-        })
+      mdns({
+          interval: 20e3
+      }),
+      pubsubPeerDiscovery({
+          interval: 1000
+      }),
+      bootstrap({
+          list: bootstrappers
+      })
     ],
+    services: {
+        lanDHT: kadDHT({
+            protocol: '/ipfs/lan/kad/1.0.0',
+            peerInfoMapper: removePublicAddressesMapper,
+            clientMode: false
+        }),
+        pubsub:
+            gossipsub({
+                allowPublishToZeroPeers: true
+            }),
+        identify: identify(),
+    },
     connectionEncryption: [noise()],
-    streamMuxers: [yamux()],
+    streamMuxers: [        
+      yamux(),
+      mplex()
+    ],
     connectionGater: {
       denyDialMultiaddr: () => false
     },
     services: {
-      identify: identify(),
-      pubsub: gossipsub({ allowPublishToZeroTopicPeers: true })
+        lanDHT: kadDHT({
+            protocol: '/ipfs/lan/kad/1.0.0',
+            peerInfoMapper: removePublicAddressesMapper,
+            clientMode: false
+        }),
+        identify: identify(),
+        pubsub: gossipsub({ allowPublishToZeroTopicPeers: true })
     }
   }
-
+  
 const ipfsLibp2pOptions = {
     transports: [
         tcp(),

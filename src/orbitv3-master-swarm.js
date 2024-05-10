@@ -18,12 +18,14 @@ import fs from 'fs';
 import { bootstrap } from '@libp2p/bootstrap'
 import { floodsub } from '@libp2p/floodsub'
 import { mplex } from '@libp2p/mplex'
-import { kadDHT } from '@libp2p/kad-dht'
+import { kadDHT, removePublicAddressesMapper } from '@libp2p/kad-dht'
+import { peerIdFromString } from '@libp2p/peer-id'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { WebSocket } from 'ws';
 import { webSockets } from '@libp2p/websockets';
 import { webRTC } from '@libp2p/webrtc';
 import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
+import { all } from '@libp2p/websockets/filters'
 
 
 const require = createRequire(import.meta.url);
@@ -42,7 +44,7 @@ const ipfsLibp2pOptions = {
     transports: [
         tcp(),
         webSockets({
-            // filter: all
+            filter: all
         }),
         webRTC(),
         circuitRelayTransport({
@@ -73,7 +75,11 @@ const ipfsLibp2pOptions = {
                 allowPublishToZeroPeers: true
             }),
         identify: identify(),
-        // kadDHT: kadDHT(),
+        lanDHT: kadDHT({
+            protocol: '/ipfs/lan/kad/1.0.0',
+            peerInfoMapper: removePublicAddressesMapper,
+            clientMode: false
+        }),
     },
     connectionManager: {
 
