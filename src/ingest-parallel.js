@@ -54,7 +54,7 @@ export default async function main(collection_path){
     let delta_time;
     let recieved_count = 0;
     for (let i = 0; i < chunkSize; i++){
-        let port = config_json[i].port - 30000;
+        let port = config_json[i].port - 40000;
         let ipAddress = config_json[i].ipAddress;
         let swarmName = config_json[i].swarmName;
         let index = config_json[i].index;

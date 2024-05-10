@@ -32,6 +32,11 @@ export const DefaultLibp2pOptions = {
       discoverRelays: 1
     })
   ],
+  peerDiscovery: [
+    mdns({
+      interval: 20e3
+    })
+  ],
   connectionEncryption: [noise()],
   streamMuxers: [yamux()],
   connectionGater: {

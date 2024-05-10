@@ -19,7 +19,9 @@ import { mplex } from '@libp2p/mplex'
 import { kadDHT } from '@libp2p/kad-dht'
 import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { WebSocket } from 'ws';
-
+import { webSockets } from '@libp2p/websockets';
+import { webRTC } from '@libp2p/webrtc';
+import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
 
 const require = createRequire(import.meta.url);
 let bootstrappers = [
@@ -36,6 +38,13 @@ const ipfsLibp2pOptions = {
     },
     transports: [
         tcp(),
+        webSockets({
+            // filter: all
+        }),
+        webRTC(),
+        circuitRelayTransport({
+            discoverRelays: 1
+        })
     ],
     streamMuxers: [
         yamux(),

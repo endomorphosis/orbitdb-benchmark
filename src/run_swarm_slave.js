@@ -71,7 +71,7 @@ export async function initSwarmSlave(chunkSize=0) {
     console.log(this_config_length)
     for (let i = 0; i < this_config_length && i < chunkSize; i++) {
         //console.log("this_config[i]: ", this_config[i])
-        const this_port = this_config[i].port;
+        const this_port = this_config[i].port + 1;
         const this_chunkSize = this_config[i].chunkSize
         const this_swarmName = this_config[i].swarmName;
         const this_index = this_config[i].index;
