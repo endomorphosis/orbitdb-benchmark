@@ -44,7 +44,7 @@ const ipfsLibp2pOptions = {
     transports: [
         tcp(),
         webSockets({
-            filter: all
+            // filter: all
         }),
         webRTC(),
         circuitRelayTransport({
