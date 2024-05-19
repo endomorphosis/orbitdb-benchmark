@@ -92,7 +92,7 @@ if (bootstrappers.length > 0) {
     }))
 }
 
-EventEmitter.defaultMaxListeners = 20;
+EventEmitter.defaultMaxListeners = 64;
 
 let ipfs
 let orbitdb
@@ -172,7 +172,9 @@ async function run(options) {
     const identities = await Identities({ipfs, path: `./orbitdb/`+id+`/identities`})
     identities.createIdentity({id}) // Remove the unused variable 'identity'
     orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
-
+    ipfs.libp2p.addEventListener("peer:connect", event => {
+        console.log('connected', event.detail)
+    })
     db = await orbitdb.open(swarmName+"-"+index+"-of-"+chunkSize,
         {
             type: 'documents',

@@ -88,7 +88,7 @@ if (bootstrappers.length > 0) {
     }))
 }
 
-EventEmitter.defaultMaxListeners = 20;
+EventEmitter.defaultMaxListeners = 64;
 
 let ipfs
 let orbitdb
@@ -164,6 +164,9 @@ async function run(options) {
     ipfs = await createHelia({blockstore: blockstore, libp2p: libp2p, datastore: datastore, blockBrokers: [bitswap()]})
     const identities = await Identities({ ipfs, path: `./orbitdb/`+id+`/identities` })
     const identity = identities.createIdentity({ id })
+    ipfs.libp2p.addEventListener("peer:connect", event => {
+        console.log('connected', event.detail)
+    })
     orbitdb = await createOrbitDB({ipfs: ipfs, identities, id: id, directory: `./orbitdb/`+id})
 
     db = await orbitdb.open(swarmName+"-"+index+"-of-"+chunkSize,
