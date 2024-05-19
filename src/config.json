@@ -66,7 +66,7 @@
     {
         "index": 9,
         "ipAddress": "127.0.0.1",
-        "port": 60008,
+        "port": 60009,
         "swarmName": "caselaw",
         "orbitdbAddress": "/orbitdb/zdpuB1n6xv2278ZsgEbPvPWoRvY8FY65fDP3uZnD336CfBsUu",
         "chunkSize": 8
@@ -74,7 +74,7 @@
     {
         "index": 10,
         "ipAddress": "127.0.0.1",
-        "port": 60008,
+        "port": 600010,
         "swarmName": "caselaw",
         "orbitdbAddress": "/orbitdb/zdpuAteGprjg7zyrK1ZZ1nyZRPnCnwePwwcUaEqA5jsRgVvrR",
         "chunkSize": 8
