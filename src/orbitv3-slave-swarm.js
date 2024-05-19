@@ -284,42 +284,69 @@ async function run(options) {
             }
         });
     });
-    let ingest_port = port - 30000
-    let ws = new WebSocket('ws://127.0.0.1:'+ingest_port);
-    console.info(`${new Date().toISOString()} getting updates ...`)
-    db.events.on('update', async (entry) => {
-        console.debug(`new head entry op ${entry.payload.op} with value ${JSON.stringify(entry.payload.value)}`)
-        if (oldHeads) {
-            for (let hash of Array.from(oldHeads, h => h.hash)) {
-                let it = db.log.iterator({gt: hash, lte: entry.hash})
+    try {
+        let ingest_port = port - 20000
+        const wss2 = new WebSocketServer({ port: ingest_port })
+
+        console.info(`${new Date().toISOString()} getting updates ...`)
+        db.events.on('update', async (entry) => {
+            console.debug(`new head entry op ${entry.payload.op} with value ${JSON.stringify(entry.payload.value)}`)
+            if (oldHeads) {
+                for (let hash of Array.from(oldHeads, h => h.hash)) {
+                    let it = db.log.iterator({gt: hash, lte: entry.hash})
+                    for await (let entry of it) {
+                        console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
+                        oldHeads = [entry]
+                        wss2.send(JSON.stringify({ "ingest" : entry.payload }))
+                    }
+                }
+            } else {
+                let it = db.log.iterator({lte: entry.hash})
                 for await (let entry of it) {
                     console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
                     oldHeads = [entry]
-                    ws.send(JSON.stringify({ "ingest" : entry.payload }))
+                    wss2.send(JSON.stringify({ "ingest" : entry.payload }))
                 }
             }
-        } else {
-            let it = db.log.iterator({lte: entry.hash})
-            for await (let entry of it) {
-                console.debug(`new updated entry ${JSON.stringify(entry.payload)}`)
-                oldHeads = [entry]
-                ws.send(JSON.stringify({ "ingest" : entry.payload }))
-            }
-        }
-    })
-    console.info(`${new Date().toISOString()} searching result: `)
-    let result = await db.query(data => {
-        return data.content === "content 5000"
-    })
-    console.info(`${new Date().toISOString()} result: `, JSON.stringify(result))
+        })
+        console.info(`${new Date().toISOString()} searching result: `)
+        let result = await db.query(data => {
+            return data.content === "content 5000"
+        })
+        console.info(`${new Date().toISOString()} result: `, JSON.stringify(result))
+    }
+    catch (error) {
+        console.log('Error connecting to ingest server:', error);
+    }
+    finally {
+        console.log('Connected to ingest server');
+    }
 }
-
 async function handleTerminationSignal() {
     console.info('received termination signal, cleaning up and exiting...');
     await db.close()
     await orbitdb.stop()
     await ipfs.stop()
     process.exit();
+}
+
+async function test() {
+    let ipAddress = "127.0.0.1"
+    let orbitdbAddress = undefined
+    let index = 1
+    let chunkSize = 8  
+    let swarmName = "caselaw"
+    let port = 50001
+
+    let test = {
+        ipAddress: ipAddress,
+        orbitdbAddress: orbitdbAddress,
+        index: index,
+        chunkSize: chunkSize,
+        swarmName: swarmName,
+        port: port
+    }
+    return await run(test)
 }
 
 await run({})
